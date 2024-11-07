@@ -1,0 +1,2 @@
+const verifyTicketUrl = "YOUR_VERIFY_TICKET_URL";
+const getAllTicketsUrl = "YOUR_GET_ALL_TICKETS_URL";
