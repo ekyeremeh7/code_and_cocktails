@@ -1,6 +1,7 @@
-import '../shared/utils/config.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Urls {
-  static String get verifyMyTicket => verifyTicketUrl;
-  static String get getAllTickets => getAllTicketsUrl;
+  static String get verifyMyTicket => dotenv.get('VERIFY_TICKET_URL');
+  static String get getAllTickets => dotenv.get('GET_ALL_TICKETS_URL');
+  static String get getAllUsers => dotenv.get('GET_ALL_USERS_URL');
 }

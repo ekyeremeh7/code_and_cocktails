@@ -11,19 +11,23 @@ class TicketSuccessResponse {
   String? updatedAt;
   String? qrCodeBase64;
   int? iV;
+  bool? checkedIn;
 
-  TicketSuccessResponse(
-      {this.sId,
-      this.event,
-      this.ticketType,
-      this.couponCode,
-      this.quantity,
-      this.squadLimit,
-      this.customer,
-      this.payment,
-      this.createdAt,
-      this.updatedAt,
-      this.iV,qrCodeBase64});
+  TicketSuccessResponse({
+    this.sId,
+    this.event,
+    this.ticketType,
+    this.couponCode,
+    this.quantity,
+    this.squadLimit,
+    this.customer,
+    this.payment,
+    this.createdAt,
+    this.updatedAt,
+    this.iV,
+    this.checkedIn,
+    qrCodeBase64,
+  });
 
   TicketSuccessResponse.fromJson(Map<String, dynamic> json) {
     sId = json['_id'];
@@ -33,14 +37,14 @@ class TicketSuccessResponse {
     quantity = json['quantity'];
     squadLimit = json['squadLimit'];
     qrCodeBase64 = json['qrCodeBase64'];
-    customer = json['customer'] != null
-        ? new Customer.fromJson(json['customer'])
-        : null;
+    customer =
+        json['customer'] != null ? Customer.fromJson(json['customer']) : null;
     payment =
-        json['payment'] != null ? new Payment.fromJson(json['payment']) : null;
+        json['payment'] != null ? Payment.fromJson(json['payment']) : null;
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
     iV = json['__v'];
+    checkedIn = json['checkedIn'];
   }
 
   Map<String, dynamic> toJson() {
@@ -61,6 +65,7 @@ class TicketSuccessResponse {
     data['createdAt'] = createdAt;
     data['updatedAt'] = updatedAt;
     data['__v'] = iV;
+    data['checkedIn'] = checkedIn;
     return data;
   }
 }

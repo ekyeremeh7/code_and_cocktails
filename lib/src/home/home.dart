@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
+import '../../shared/services/sembast_service.dart';
 import '../stats/history_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -49,8 +50,10 @@ class _HomePageState extends State<HomePage> {
             actions: [
               GestureDetector(
                 onTap: () {
+                  final SembastService _sembastService = SembastService();
+                  _sembastService.clearUserStore();
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (builder) => StatsPage(result: null)));
+                      builder: (builder) => const StatsPage(result: null)));
                 },
                 child: Padding(
                   padding:
@@ -65,10 +68,13 @@ class _HomePageState extends State<HomePage> {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (builder) => const HistoryPage()));
+                      builder: (builder) => const HistoryPage(
+                            result: null,
+                          )));
                 },
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 8.0, right: 15.0, top: 2),
+                  padding:
+                      const EdgeInsets.only(left: 8.0, right: 15.0, top: 2),
                   child: Icon(
                     Icons.history,
                     size: 40,

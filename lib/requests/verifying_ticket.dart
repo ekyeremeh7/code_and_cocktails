@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../models/err_success_model.dart';
+import '../models/user_model.dart';
 
 class VerifyingTicketSingleton {
   final dio = Dio();
@@ -113,6 +114,36 @@ class VerifyingTicketSingleton {
       return null;
     }
   }
+
+
+
+  Future<UserResponse?> getAllUsers() async {
+    Response response = await dio.get(Urls.getAllUsers);
+    print(response.realUri);
+    print(response.data.toString());
+    print(
+        "getAllUsers Response data ${response.data} Status code: ${response.statusCode} data null: ${response.data == null} ");
+
+    if (response.data == null || response.data.toString().isEmpty) {
+      return null;
+    }
+
+    if (response.statusCode == 200) {
+      debugPrint("getAllUsers ${response.data}");
+      // List data = response.data['tickets'];
+
+      // List<TicketSuccessResponse> allItems = data
+      //     .map((element) => TicketSuccessResponse.fromJson(element))
+      //     .toList();
+
+      // return allItems;
+      return UserResponse.fromJson(response.data);
+    } else {
+      return null;
+    }
+  }
+
+
 }
 
 // void main() {

@@ -1,9 +1,12 @@
 import 'package:code_and_cocktails/src/home/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'shared/services/sembast_service.dart';
 
-void main() {
-  initEnv();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initEnv();
+  await initSembast();
   runApp(const MyApp());
 }
 
@@ -38,6 +41,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
-initEnv() async {
-  await dotenv.load();
+Future<void> initEnv() async {
+  await dotenv.load(fileName: ".env");
+}
+
+Future<void> initSembast() async {
+  await SembastService().init();
 }
