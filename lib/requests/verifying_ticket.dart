@@ -43,33 +43,48 @@ class VerifyingTicketSingleton {
       print(response.realUri);
       print(response.data.toString());
       print(
-          "Response data ${response.data} Status code: ${response.statusCode} data null: ${response.data == null} ");
+          "verifyMyTicket Response data ${response.data} data null: ${response.data == null} ");
 
+      debugPrint(
+          "verifyMyTicket Response data status code: ${response.statusCode}}");
       if (response.data == null || response.data.toString().isEmpty) {
         return null;
       }
       Map<String, dynamic> responseData = response.data;
       bool success = responseData['success'] ?? false;
-
-      if (success) {
-        return ErrSuccResponse(
-            success: true,
-            ticketSuccess: TicketSuccessResponse.fromJson(response.data),
-            error: null);
-      } else {
-        // If success is false, check the message for specific errors like "Ticket is used up"
-        String? message = responseData['message'];
-        if (message == "Ticket is used up") {
+      bool hasSuccessKey = responseData.containsKey('success');
+      debugPrint("Success $success ${response.statusCode}");
+      if (response.statusCode == 200) {
+        debugPrint("Has Success key $hasSuccessKey");
+        if (!hasSuccessKey) {
           return ErrSuccResponse(
-            success: false,
-            error: TicketErrorResponse(message: message),
-          );
+              success: true,
+              ticketSuccess: TicketSuccessResponse.fromJson(response.data),
+              error: null);
         } else {
-          return ErrSuccResponse(
-            success: false,
-            error: TicketErrorResponse(message: "An unknown error occurred."),
-          );
+          if (success) {
+            return ErrSuccResponse(
+                success: true,
+                ticketSuccess: TicketSuccessResponse.fromJson(response.data),
+                error: null);
+          } else {
+            // If success is false, check the message for specific errors like "Ticket is used up"
+            String? message = responseData['message'];
+
+            return ErrSuccResponse(
+              success: false,
+              error: TicketErrorResponse(
+                  message: message!.isNotEmpty
+                      ? message
+                      : "An unknown error occurred.Try again."),
+            );
+          }
         }
+      } else {
+        return ErrSuccResponse(
+          success: false,
+          error: TicketErrorResponse.fromJson(response.data),
+        );
       }
     } on DioException catch (e) {
       debugPrint("Err ${e.toString()}");
@@ -115,43 +130,34 @@ class VerifyingTicketSingleton {
     }
   }
 
-
-
   Future<UserResponse?> getAllUsers() async {
-    Response response = await dio.get(Urls.getAllUsers);
-    print(response.realUri);
-    print(response.data.toString());
-    print(
-        "getAllUsers Response data ${response.data} Status code: ${response.statusCode} data null: ${response.data == null} ");
+    try {
+      Response response = await dio.get(Urls.getAllUsers);
+      print(response.realUri);
+      print(response.data.toString());
+      print(
+          "getAllUsers Response data ${response.data} Status code: ${response.statusCode} data null: ${response.data == null} ");
 
-    if (response.data == null || response.data.toString().isEmpty) {
-      return null;
-    }
+      if (response.data == null || response.data.toString().isEmpty) {
+        return null;
+      }
 
-    if (response.statusCode == 200) {
-      debugPrint("getAllUsers ${response.data}");
-      // List data = response.data['tickets'];
+      if (response.statusCode == 200) {
+        debugPrint("@@ getAllUsers ${response.data}");
+        // List data = response.data['tickets'];
 
-      // List<TicketSuccessResponse> allItems = data
-      //     .map((element) => TicketSuccessResponse.fromJson(element))
-      //     .toList();
+        // List<TicketSuccessResponse> allItems = data
+        //     .map((element) => TicketSuccessResponse.fromJson(element))
+        //     .toList();
 
-      // return allItems;
-      return UserResponse.fromJson(response.data);
-    } else {
+        // return allItems;
+        return UserResponse.fromJson(response.data);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error fetching all users ${e.toString()}");
       return null;
     }
   }
-
-
 }
-
-// void main() {
-//   // Access the singleton instance
-//   VerifyingTicketSingleton singleton = VerifyingTicketSingleton();
-
-//   // Set and get the variable
-//   singleton.myVariable = 'Hello, Singleton!';
-//   print(singleton.myVariable); // Output: Hello, Singleton!
-// }
-

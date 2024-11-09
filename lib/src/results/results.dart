@@ -149,8 +149,7 @@ class _ResultsPageState extends State<ResultsPage> {
 
       results = await verifyingTicketSingleton.verifyMyTicket(
           ticketID: widget.result?.code ?? '');
-      debugPrint(
-          "Results ${results!.error!.message} ${results!.error!.success} \n Success ${results!.success}");
+      debugPrint("Results ${results!.ticketSuccess}");
       if (results == null) {
         setState(() {
           verifyingTicket = null;

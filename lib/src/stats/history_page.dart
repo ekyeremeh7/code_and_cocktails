@@ -25,14 +25,21 @@ class _HistoryPageState extends State<HistoryPage> {
   final SembastService _sembastService = SembastService();
 
   userFallback() async {
-    final cachedData = await _sembastService.getUserResponse();
-    debugPrint("userFallback icalled ${cachedData!.length}");
-    if (cachedData.isNotEmpty) {
-      loadCachedUserResponse(cachedData);
-    } else {
-      debugPrint("userFallback else ");
+    try {
+      final cachedData = await _sembastService.getUserResponse();
+      debugPrint("userFallback icalled ${cachedData!.length}");
+      if (cachedData.isNotEmpty) {
+        loadCachedUserResponse(cachedData);
+      } else {
+        debugPrint("If no cached data, fetch from server");
+        setState(() {
+          userStatus = UserStatus.loading;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching users: $e");
       setState(() {
-        userStatus = UserStatus.loading;
+        userStatus = UserStatus.error;
       });
     }
   }
@@ -104,38 +111,49 @@ class _HistoryPageState extends State<HistoryPage> {
 
   _getAllUsers() {
     Future.microtask(() async {
-      try {
-        VerifyingTicketSingleton verifyingTicketSingleton =
-            VerifyingTicketSingleton();
-        userFallback();
-        final results = await verifyingTicketSingleton.getAllUsers();
-        if (results != null) {
-          cacheUserResponse(results);
-          setState(() {
-            userStatus = UserStatus.success;
-          });
-        } else {
-          final cachedData = await _sembastService.getUserResponse();
-          debugPrint("result is null ${cachedData!.length}");
-          if (cachedData.isNotEmpty) {
-            loadCachedUserResponse(cachedData);
-          } else {
-            setState(() {
-              userStatus = UserStatus.error;
-            });
-          }
-        }
-      } catch (e) {
-        debugPrint("getAllUsers error ${e.toString()} ");
-        final cachedData = await _sembastService.getUserResponse();
-        debugPrint("result is null ${cachedData!.length}");
-        if (cachedData.isNotEmpty) {
-          loadCachedUserResponse(cachedData);
-        } else {
-          setState(() {
-            userStatus = UserStatus.error;
-          });
-        }
+      // Existing working ccode
+
+      // VerifyingTicketSingleton verifyingTicketSingleton =
+      //     VerifyingTicketSingleton();
+      // setState(() {
+      //   userStatus = UserStatus.loading;
+      // });
+
+      // results = await verifyingTicketSingleton.getAllUsers();
+      // debugPrint(
+      //     "CheckInCount ${results!.checkedInCount.toString()} totalUsers ${results!.totalCount.toString()}");
+      // if (results == null) {
+      //   setState(() {
+      //     userStatus = UserStatus.error;
+      //   });
+      //   return null;
+      // }
+
+      // if (results != null) {
+      //   debugPrint("RESP OK:");
+      //   setState(() {
+      //     userStatus = UserStatus.success;
+      //   });
+      // }
+
+      //new change
+      VerifyingTicketSingleton verifyingTicketSingleton =
+          VerifyingTicketSingleton();
+      userFallback();
+      results = await verifyingTicketSingleton.getAllUsers();
+      if (results == null) {
+        setState(() {
+          userStatus = UserStatus.error;
+        });
+        return null;
+      }
+
+      if (results != null) {
+        debugPrint("RESP OK:");
+        cacheUserResponse(results);
+        setState(() {
+          userStatus = UserStatus.success;
+        });
       }
     });
   }
@@ -197,7 +215,7 @@ _buildNoUserWidget() {
 
 _buildCheckedTotalWidget(UserResponse? results) {
   return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+    margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -349,35 +367,6 @@ _buildUser(
                       const SizedBox(
                         height: 10,
                       ),
-                      // Text(
-                      //   "Ticket Type: ${ticket.ticketType ?? 'N/A'}",
-                      //   style: const TextStyle(
-                      //       color: Colors.black,
-                      //       fontWeight: FontWeight.bold,
-                      //       fontSize: 14),
-                      // ),
-                      // Text(
-                      //   "Price: GHS ${ticket.payment!.amount ?? "0.0"}",
-                      //   style: const TextStyle(
-                      //       color: Colors.black,
-                      //       fontWeight: FontWeight.bold,
-                      //       fontSize: 14),
-                      // ),
-                      // Text(
-                      //   "Coupon Code: ${ticket.couponCode!.isEmpty || ticket.couponCode == null ? 'N/A' : ticket.couponCode}",
-                      //   style: const TextStyle(
-                      //       color: Colors.black,
-                      //       fontWeight: FontWeight.bold,
-                      //       fontSize: 14),
-                      // ),
-                      // Text(
-                      //   "Quantity : ${ticket.quantity.toString() ?? 'N/A'}",
-                      //   style: const TextStyle(
-                      //       color: Colors.black,
-                      //       fontWeight: FontWeight.bold,
-                      //       fontSize: 14),
-                      // ),
-
                       InfoRichText(
                         title: "Ticket Type",
                         value: ticket.ticketType ?? 'N/A',
@@ -398,7 +387,16 @@ _buildUser(
                       const SizedBox(height: 4),
                       InfoRichText(
                         title: "Quantity",
-                        value: ticket.quantity.toString() ?? 'N/A',
+                        value: ticket.quantity == null
+                            ? 'N/A'
+                            : ticket.quantity.toString(),
+                      ),
+                      const SizedBox(height: 4),
+                      InfoRichText(
+                        title: "Squad Limit",
+                        value: ticket.squadLimit == null
+                            ? 'N/A'
+                            : ticket.squadLimit.toString(),
                       ),
                     ]),
                 child: const Icon(
