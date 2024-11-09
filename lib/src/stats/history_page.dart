@@ -151,7 +151,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (results != null) {
         debugPrint("RESP OK:");
         cacheUserResponse(results);
-        setState(() {
+        setState(() { 
           userStatus = UserStatus.success;
         });
       }
