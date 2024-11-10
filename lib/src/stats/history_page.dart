@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_popup/flutter_popup.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import '../../models/ticket_model.dart';
 import '../../models/ticket_request_success.dart';
 import '../../models/user_model.dart';
 import '../../requests/verifying_ticket.dart';
 import '../../shared/services/sembast_service.dart';
 import '../../shared/utils/assets.dart';
 import '../../shared/utils/enums.dart';
+import '../../shared/utils/helper.dart';
+import '../../shared/utils/styled_toast/selected_toast.dart';
 
 class HistoryPage extends StatefulWidget {
   final Barcode? result;
@@ -71,7 +74,7 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   void initState() {
     super.initState();
-    _getAllUsers();
+    _getAllUsers(context);
   }
 
   @override
@@ -109,7 +112,7 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  _getAllUsers() {
+  _getAllUsers(BuildContext ctx) {
     Future.microtask(() async {
       // Existing working ccode
 
@@ -139,7 +142,9 @@ class _HistoryPageState extends State<HistoryPage> {
       //new change
       VerifyingTicketSingleton verifyingTicketSingleton =
           VerifyingTicketSingleton();
-      userFallback();
+      await userFallback();
+      List<TicketSuccessResponse> cachedData = results?.results ?? [];
+
       results = await verifyingTicketSingleton.getAllUsers();
       if (results == null) {
         setState(() {
@@ -150,8 +155,21 @@ class _HistoryPageState extends State<HistoryPage> {
 
       if (results != null) {
         debugPrint("RESP OK:");
+
+        List<TicketSuccessResponse> serverData = results?.results ?? [];
+        debugPrint(
+            "server data first ${serverData.first.sId}Cached data first ${cachedData.first.sId}");
+        if (Helper.isServerDataUpdated(serverData, cachedData)) {
+          debugPrint(
+              "New or updated data is available! ${serverData.length} ${cachedData.length}");
+          if (context.mounted) {
+            failed(ctx, 'History updated');
+          }
+        } else {
+          debugPrint("No new or updated data is available!");
+        }
         cacheUserResponse(results);
-        setState(() { 
+        setState(() {
           userStatus = UserStatus.success;
         });
       }

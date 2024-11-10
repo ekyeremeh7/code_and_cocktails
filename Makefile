@@ -3,9 +3,16 @@ clean:
 	flutter clean
 	flutter pub get
 
-apk:
+split-apk:
 	@echo "[+] Cleaning dependencies"
 	flutter clean
 	flutter pub get
-	@echo "[+] Building apk"
+	@echo "[+] Building split apk"
 	flutter build apk --split-per-abi
+
+universal:
+	@echo "[+] Cleaning dependencies"
+	flutter clean
+	flutter pub get
+	@echo "[+] Building universal apk"
+	flutter build apk --release 

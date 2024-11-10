@@ -61,7 +61,7 @@ class _HomePageState extends State<HomePage> {
                   child: Icon(
                     Icons.account_balance_wallet_rounded,
                     size: 40,
-                    color: Theme.of(context).disabledColor.withOpacity(.3),
+                    color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
                 ),
               ),
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                   child: Icon(
                     Icons.history,
                     size: 40,
-                    color: Theme.of(context).disabledColor.withOpacity(.3),
+                    color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
                 ),
               )

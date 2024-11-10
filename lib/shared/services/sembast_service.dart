@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast_io.dart';
 
-import '../../models/ticket_request_success.dart';
-
 class SembastService {
   static final SembastService _instance = SembastService._internal();
   factory SembastService() => _instance;
