@@ -1,7 +1,6 @@
 import '../../models/ticket_request_success.dart';
 
 class Helper {
-
   static bool isServerDataUpdated(List<TicketSuccessResponse> serverData,
       List<TicketSuccessResponse> cachedData) {
     // If the lengths are different, data is updated
@@ -24,5 +23,9 @@ class Helper {
 
   static String generateChecksum(TicketSuccessResponse ticket) {
     return '${ticket.sId}-${ticket.squadLimit}-${ticket.qrCodeBase64}-${ticket.updatedAt}';
+  }
+
+  static bool isGreaterThan(num value, num other) {
+    return value > other;
   }
 }

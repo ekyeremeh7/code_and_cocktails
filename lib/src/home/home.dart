@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                       const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
                   child: Icon(
                     Icons.account_balance_wallet_rounded,
-                    size: 40,
+                    size: 35,
                     color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
                 ),
@@ -77,7 +77,7 @@ class _HomePageState extends State<HomePage> {
                       const EdgeInsets.only(left: 8.0, right: 15.0, top: 2),
                   child: Icon(
                     Icons.history,
-                    size: 40,
+                    size: 35,
                     color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
                 ),

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_popup/flutter_popup.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -7,9 +10,13 @@ import '../../models/user_model.dart';
 import '../../requests/verifying_ticket.dart';
 import '../../shared/services/sembast_service.dart';
 import '../../shared/utils/assets.dart';
+import '../../shared/utils/constants.dart';
+import '../../shared/utils/debouncer.dart';
 import '../../shared/utils/enums.dart';
 import '../../shared/utils/helper.dart';
+import '../../shared/utils/helper.dart';
 import '../../shared/utils/styled_toast/selected_toast.dart';
+import 'history_page_search.dart';
 
 class HistoryPage extends StatefulWidget {
   final Barcode? result;
@@ -26,6 +33,14 @@ class _HistoryPageState extends State<HistoryPage> {
   UserStatus? userStatus;
   UserResponse? results;
   final SembastService _sembastService = SembastService();
+  List<TicketSuccessResponse> filteredResults = [];
+  bool showSearch = false;
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+  bool? _isCheckedIn;
+
+  final Debouncer _debouncer =
+      Debouncer(delay: const Duration(milliseconds: 800));
 
   userFallback() async {
     try {
@@ -71,45 +86,261 @@ class _HistoryPageState extends State<HistoryPage> {
     });
   }
 
+  void _onSearch(String query, bool? isCheckedIn) {
+    setState(() {
+      filteredResults = results!.results.where((ticket) {
+        final nameMatches = ticket.customer?.name
+                ?.toLowerCase()
+                .contains(query.toLowerCase()) ??
+            false;
+
+        // Filter by checked-in status
+        bool statusMatches;
+        if (isCheckedIn == null) {
+          // If null, don't filter by status
+          statusMatches = true;
+        } else {
+          // Check if the ticket status matches the isCheckedIn value
+          // Treat missing `checkedIn` field as 'false' (unchecked)
+          statusMatches = (ticket.checkedIn ?? false) == isCheckedIn;
+        }
+
+        return nameMatches && statusMatches;
+      }).toList();
+      debugPrint(
+          "Filtered list $_isCheckedIn ${filteredResults.length} ${results!.results.length}");
+    });
+  }
+
+  // void _onSearchChanged() {
+  //   if (_debounce?.isActive ?? false) _debounce!.cancel();
+  //   _debounce = Timer(const Duration(milliseconds: 500), () {
+  //     if (_searchController.text.length > 3) {
+  //       _onSearch(_searchController.text, _isCheckedIn);
+  //     }
+  //   });
+  // }
+
   @override
   void initState() {
     super.initState();
+    _isCheckedIn = null;
+    // _searchController.addListener(_onSearchChanged);
     _getAllUsers(context);
+  }
+
+  @override
+  void dispose() {
+    // _searchController.removeListener(_onSearchChanged);
+    // _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(
-              Icons.chevron_left,
-              color: Theme.of(context).primaryColor,
-              size: 38,
-            )),
-        elevation: 0,
-        backgroundColor: Theme.of(context).canvasColor,
-        centerTitle: true,
-        title: Text(
-          "History",
-          style: TextStyle(
-            fontSize: 18,
-            color: Theme.of(context).primaryColor,
-            fontWeight: FontWeight.bold,
-          ),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black.withOpacity(0.5)),
+          centerTitle: false,
+          title: showSearch == true
+              ? FadeInRight(
+                  child: Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: MediaQuery.of(context).size.height * 0.048,
+                    child: TextFormField(
+                      cursorColor: Colors.black,
+                      controller: _searchController,
+                      style: const TextStyle(
+                          color: Colors.black,
+                          fontFamily: 'Manrope',
+                          fontSize: 15),
+                      cursorHeight: 20,
+                      cursorWidth: 0.8,
+                      decoration: InputDecoration(
+                        hintText: 'Search',
+                        hintStyle: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.grey,
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.grey,
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: const BorderSide(
+                            color: Colors.grey,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        if (value.isEmpty) {
+                          _debouncer.run(() {
+                            filteredResults.clear();
+                            _isCheckedIn == null
+                                ? results!.results.length
+                                : filteredResults.isNotEmpty
+                                    ? filteredResults.length
+                                    : results!.checkedInCount;
+                            _getAllUsers(context);
+                          });
+                        } else {
+                          debugPrint("Query $value");
+                          if (Helper.isGreaterThan(value.length, 3)) {
+                            _debouncer.run(() {
+                              _onSearch(value, _isCheckedIn);
+                            });
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                )
+              : FadeInLeft(
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.arrow_back_ios,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        Text(
+                          'History',
+                          style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+          actions: [
+            // showSearch == false
+            //     ? InkWell(
+            //         onTap: () {
+            //           setState(() {
+            //             showSearch = !showSearch;
+            //           });
+            //         },
+            //         child: const Padding(
+            //           padding: EdgeInsets.only(right: 8.0),
+            //           child: Icon(
+            //             Icons.search,
+            //             size: 29,
+            //           ),
+            //         ),
+            //       )
+            //     : InkWell(
+            //         onTap: () {
+            //           setState(() {
+            //             showSearch = !showSearch;
+            //           });
+            //         },
+            //         child: Padding(
+            //           padding: const EdgeInsets.only(right: 14.0),
+            //           child: Container(
+            //             height: 25,
+            //             width: 25,
+            //             decoration: BoxDecoration(
+            //                 color: Colors.red,
+            //                 borderRadius: BorderRadius.circular(60)),
+            //             child: const Icon(
+            //               Icons.close_outlined,
+            //               color: Colors.white,
+            //               size: 23,
+            //             ),
+            //           ),
+            //         ),
+            //       ),
+          
+          ],
         ),
-      ),
-      body: userStatus == UserStatus.loading
-          ? _buildLoader()
-          : userStatus == UserStatus.error
-              ? _buildErrorWidget()
-              : results != null
-                  ? _buildUserList()
-                  : _buildNoUserWidget(),
-    );
+        body: Column(
+          children: [
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: HistoryPageSearch(onSearch: _onSearch),
+            // ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Radio<bool?>(
+                    value: null,
+                    groupValue: _isCheckedIn,
+                    onChanged: (value) async {
+                      setState(() {
+                        _isCheckedIn = value;
+                      });
+                      await _getAllUsers(context);
+                      _onSearch(_searchController.text, _isCheckedIn);
+                    },
+                  ),
+                  const Text('All'),
+                  Radio<bool?>(
+                    value: true,
+                    groupValue: _isCheckedIn,
+                    onChanged: (value) async {
+                      filteredResults.clear();
+                      setState(() {
+                        _isCheckedIn = value;
+                      });
+                      _onSearch(_searchController.text, _isCheckedIn);
+                    },
+                  ),
+                  const Text('Checked In'),
+                  Radio<bool?>(
+                    value: false,
+                    groupValue: _isCheckedIn,
+                    onChanged: (value) {
+                      filteredResults.clear();
+                      setState(() {
+                        _isCheckedIn = value;
+                      });
+                      _onSearch(_searchController.text, _isCheckedIn);
+                    },
+                  ),
+                  const Text('Not Checked In'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: userStatus == UserStatus.loading
+                  ? _buildLoader()
+                  : userStatus == UserStatus.error
+                      ? _buildErrorWidget()
+                      : results != null
+                          ? _buildUserList()
+                          : _buildNoUserWidget(),
+            ),
+          ],
+        ));
   }
 
   _getAllUsers(BuildContext ctx) {
@@ -154,7 +385,7 @@ class _HistoryPageState extends State<HistoryPage> {
       }
 
       if (results != null) {
-        debugPrint("RESP OK:");
+        debugPrint("RESP OK: ${results!.results.length}");
 
         List<TicketSuccessResponse> serverData = results?.results ?? [];
         debugPrint(
@@ -179,14 +410,18 @@ class _HistoryPageState extends State<HistoryPage> {
   _buildUserList() {
     return Column(
       children: [
-        _buildCheckedTotalWidget(results),
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.84,
+        _buildCheckedTotalWidget(results, filteredResults, _isCheckedIn),
+        Expanded(
+          // height: MediaQuery.of(context).size.height * 0.84,
           child: ListView.builder(
             padding: const EdgeInsets.all(8.0),
-            itemCount: results!.results.length,
+            itemCount: filteredResults.isEmpty
+                ? results!.results.length
+                : filteredResults.length,
             itemBuilder: (context, index) {
-              final ticket = results!.results[index];
+              final ticket = filteredResults.isEmpty
+                  ? results!.results[index]
+                  : filteredResults[index];
               final customer = ticket.customer;
               bool isCheckedIn = ticket.checkedIn ?? false;
 
@@ -231,19 +466,27 @@ _buildNoUserWidget() {
   );
 }
 
-_buildCheckedTotalWidget(UserResponse? results) {
+_buildCheckedTotalWidget(UserResponse? results,
+    List<TicketSuccessResponse> filteredList, bool? isCheckedIn) {
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Total Checked-in Users',
-          style: TextStyle(
+        Text(
+          isCheckedIn == null
+              ? "All Users"
+              : isCheckedIn
+                  ? 'Checked-In Users'
+                  : 'Not Checked Users',
+          style: const TextStyle(
               color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
         ),
         Text(
-          "${results!.checkedInCount.toString()}/${results.totalCount.toString()}",
+          isCheckedIn == null
+              // ? "${results!.results.length}/${results.results.length}"
+              ? "${results!.results.length}"
+              : "${filteredList.isNotEmpty ? filteredList.length : results!.checkedInCount.toString()}/${results!.totalCount.toString()}",
           style: const TextStyle(
             color: Colors.black,
             fontSize: 16,
