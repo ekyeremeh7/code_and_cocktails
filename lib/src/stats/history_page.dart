@@ -388,9 +388,7 @@ class _HistoryPageState extends State<HistoryPage> {
         debugPrint("RESP OK: ${results!.results.length}");
 
         List<TicketSuccessResponse> serverData = results?.results ?? [];
-        debugPrint(
-            "server data first ${serverData.first.sId}Cached data first ${cachedData.first.sId}");
-        if (Helper.isServerDataUpdated(serverData, cachedData)) {
+           if (Helper.isServerDataUpdated(serverData, cachedData)) {
           debugPrint(
               "New or updated data is available! ${serverData.length} ${cachedData.length}");
           if (context.mounted) {
