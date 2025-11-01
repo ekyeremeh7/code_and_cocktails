@@ -1,5 +1,4 @@
 import 'package:code_and_cocktails/src/home/home.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -17,7 +16,6 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   int selectedTicketIndex = 0;
-  bool selectCategory = false;
   bool? verifyingTicket;
   List<TicketSuccessResponse>? results;
 
@@ -107,7 +105,9 @@ class _StatsPageState extends State<StatsPage> {
         },
         child: Center(
           child: Text(
-              "${selectedTicketIndex == 0 ? results?.length : currentIndexItems?.length}"),
+            "${selectedTicketIndex == 0 ? results?.length ?? 0 : currentIndexItems?.length ?? 0}",
+            style: const TextStyle(color: Colors.white),
+          ),
         ),
       ),
       appBar: AppBar(
@@ -116,8 +116,9 @@ class _StatsPageState extends State<StatsPage> {
               Navigator.pop(context);
             },
             icon: Icon(
-              Icons.chevron_left,
+              Icons.arrow_back_ios,
               color: Theme.of(context).primaryColor,
+              size: 20,
             )),
         elevation: 0,
         backgroundColor: Theme.of(context).canvasColor,
@@ -155,243 +156,53 @@ class _StatsPageState extends State<StatsPage> {
                 )
               : Column(
                   children: [
-                    selectCategory == false
-                        ? Card(
-                            elevation: 2,
-                            shadowColor: Colors.black.withOpacity(.2),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(children: [
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      selectCategory = true;
-                                    });
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
-                                        border: Border.all(
-                                            color: const Color(0xffEA1154),
-                                            width: 1.5)),
-                                    width: MediaQuery.of(context).size.width,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8.0, vertical: 16.0),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                ticketTypes[selectedTicketIndex]
-                                                    ['name'],
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .disabledColor
-                                                      .withOpacity(.9),
-                                                  fontSize: 18.0,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              Text(
-                                                "",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .disabledColor
-                                                      .withOpacity(.9),
-                                                  fontSize: 18.0,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                              Container(
-                                                height: 28,
-                                                width: 28,
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      width: 1.5,
-                                                      color: const Color(
-                                                          0xffEA1154)),
-                                                  color:
-                                                      const Color(0xffEA1154),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Center(
-                                                  child: Icon(
-                                                    Icons.done,
-                                                    color: Colors.white,
-                                                    size: 13,
-                                                  ),
-                                                ),
-                                              )
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              ]),
-                            ),
-                          )
-                        : Card(
-                            color:
-                                Theme.of(context).disabledColor.withOpacity(.1),
-                            elevation: 2,
-                            shadowColor: Colors.black.withOpacity(.2),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                children: [
-                                  // const SizedBox(
-                                  //   height: 8.0,
-                                  // ),
-                                  for (int i = 0; i < ticketTypes.length; i++)
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 6.0),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            selectedTicketIndex = i;
-                                            Future.delayed(
-                                                const Duration(
-                                                    milliseconds: 300), () {
-                                              setState(() {
-                                                selectCategory = false;
-                                              });
-                                            });
-                                          });
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(4.0),
-                                              border: Border.all(
-                                                  color: selectedTicketIndex ==
-                                                          i
-                                                      ? const Color(0xffEA1154)
-                                                      : Theme.of(context)
-                                                          .disabledColor
-                                                          .withOpacity(.1),
-                                                  width: 1.5)),
-                                          width:
-                                              MediaQuery.of(context).size.width,
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0,
-                                                vertical: 16.0),
-                                            child: Column(
-                                              children: [
-                                                Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      ticketTypes[i]['name'],
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Theme.of(context)
-                                                            .disabledColor
-                                                            .withOpacity(.9),
-                                                        fontSize: 18.0,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      "",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: TextStyle(
-                                                        color: Theme.of(context)
-                                                            .disabledColor
-                                                            .withOpacity(.9),
-                                                        fontSize: 18.0,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      height: 28,
-                                                      width: 28,
-                                                      decoration: BoxDecoration(
-                                                        border: Border.all(
-                                                          width: 1.5,
-                                                          color: selectedTicketIndex ==
-                                                                  i
-                                                              ? const Color(
-                                                                  0xffEA1154)
-                                                              : Theme.of(
-                                                                      context)
-                                                                  .disabledColor
-                                                                  .withOpacity(
-                                                                      .1),
-                                                        ),
-                                                        color:
-                                                            selectedTicketIndex ==
-                                                                    i
-                                                                ? const Color(
-                                                                    0xffEA1154)
-                                                                : Colors
-                                                                    .transparent,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      child: Center(
-                                                        child:
-                                                            selectedTicketIndex !=
-                                                                    i
-                                                                ? const SizedBox()
-                                                                : const Icon(
-                                                                    Icons.done,
-                                                                    color: Colors
-                                                                        .white,
-                                                                    size: 13,
-                                                                  ),
-                                                      ),
-                                                    )
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                ],
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: List.generate(
+                          ticketTypes.length,
+                          (index) {
+                            final isSelected = selectedTicketIndex == index;
+                            return FilterChip(
+                              label: Text(ticketTypes[index]['name']),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedTicketIndex = index;
+                                });
+                              },
+                              selectedColor: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.2),
+                              checkmarkColor: Theme.of(context).primaryColor,
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? Theme.of(context).primaryColor
+                                    : Colors.grey.shade700,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
                               ),
-                            ),
-                          ),
-                    const SizedBox(
-                      height: 16,
+                            );
+                          },
+                        ),
+                      ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
                         children: [
-                          const SizedBox(
-                            height: 8.0,
-                          ),
                           for (int k = 0;
                               k < (currentIndexItems?.length ?? 0);
                               k++)
                             infoDataCard(
-                                price: results?[k].payment?.amount ?? 0,
+                                price:
+                                    currentIndexItems?[k].payment?.amount ?? 0,
                                 isVerified: true,
                                 color: Theme.of(context).primaryColor,
-                                name: results?[k].ticketType),
-                          const SizedBox(
-                            height: 8.0,
-                          ),
+                                name: currentIndexItems?[k].ticketType),
                         ],
                       ),
                     ),
@@ -404,87 +215,77 @@ class _StatsPageState extends State<StatsPage> {
 
   Widget infoDataCard(
       {String? name, dynamic price, bool? isVerified, Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: GestureDetector(
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4.0),
-              border: Border.all(
-                  color: Theme.of(context).disabledColor.withOpacity(.1),
-                  width: 1.5)),
-          width: MediaQuery.of(context).size.width,
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name ?? "",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color:
-                              Theme.of(context).disabledColor.withOpacity(.9),
-                          fontSize: 18.0,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      "GHS $price",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).disabledColor.withOpacity(.9),
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Container(
-                      height: 28,
-                      width: 28,
-                      margin: const EdgeInsets.only(left: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          width: 1.5,
-                          color: isVerified == true
-                              ? (color?.withOpacity(.1) ??
-                                  const Color(0xffEA1154))
-                              : Theme.of(context).disabledColor.withOpacity(.1),
-                        ),
-                        color: isVerified == true
-                            ? (color?.withOpacity(.1) ??
-                                const Color(0xffEA1154))
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: isVerified != true
-                            ? const SizedBox(
-                                child: Icon(
-                                  Icons.close,
-                                  color: Colors.red,
-                                  size: 13,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.done,
-                                color: Colors.white,
-                                size: 13,
-                              ),
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name ?? "",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "GHS $price",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: isVerified == true
+                    ? Colors.green.withOpacity(0.1)
+                    : Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isVerified == true ? Icons.check_circle : Icons.cancel,
+                    color: isVerified == true ? Colors.green : Colors.red,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isVerified == true ? "Verified" : "Failed",
+                    style: TextStyle(
+                      color: isVerified == true ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

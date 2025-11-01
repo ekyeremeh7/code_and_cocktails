@@ -1,22 +1,18 @@
 import 'dart:async';
 
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_popup/flutter_popup.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import '../../models/ticket_model.dart';
 import '../../models/ticket_request_success.dart';
 import '../../models/user_model.dart';
 import '../../requests/verifying_ticket.dart';
 import '../../shared/services/sembast_service.dart';
 import '../../shared/utils/assets.dart';
-import '../../shared/utils/constants.dart';
 import '../../shared/utils/debouncer.dart';
 import '../../shared/utils/enums.dart';
 import '../../shared/utils/helper.dart';
-import '../../shared/utils/helper.dart';
 import '../../shared/utils/styled_toast/selected_toast.dart';
-import 'history_page_search.dart';
+import 'analytics_page.dart';
 
 class HistoryPage extends StatefulWidget {
   final Barcode? result;
@@ -34,10 +30,10 @@ class _HistoryPageState extends State<HistoryPage> {
   UserResponse? results;
   final SembastService _sembastService = SembastService();
   List<TicketSuccessResponse> filteredResults = [];
-  bool showSearch = false;
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   bool? _isCheckedIn;
+  bool _showClearButton = false;
 
   final Debouncer _debouncer =
       Debouncer(delay: const Duration(milliseconds: 800));
@@ -89,10 +85,24 @@ class _HistoryPageState extends State<HistoryPage> {
   void _onSearch(String query, bool? isCheckedIn) {
     setState(() {
       filteredResults = results!.results.where((ticket) {
-        final nameMatches = ticket.customer?.name
-                ?.toLowerCase()
-                .contains(query.toLowerCase()) ??
-            false;
+        final searchQuery = query.toLowerCase();
+
+        // Search by name
+        final nameMatches =
+            ticket.customer?.name?.toLowerCase().contains(searchQuery) ?? false;
+
+        // Search by email
+        final emailMatches =
+            ticket.customer?.email?.toLowerCase().contains(searchQuery) ??
+                false;
+
+        // Search by phone
+        final phoneMatches =
+            ticket.customer?.phone?.toLowerCase().contains(searchQuery) ??
+                false;
+
+        // Combined search matches
+        final searchMatches = nameMatches || emailMatches || phoneMatches;
 
         // Filter by checked-in status
         bool statusMatches;
@@ -105,7 +115,7 @@ class _HistoryPageState extends State<HistoryPage> {
           statusMatches = (ticket.checkedIn ?? false) == isCheckedIn;
         }
 
-        return nameMatches && statusMatches;
+        return searchMatches && statusMatches;
       }).toList();
       debugPrint(
           "Filtered list $_isCheckedIn ${filteredResults.length} ${results!.results.length}");
@@ -131,8 +141,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   void dispose() {
-    // _searchController.removeListener(_onSearchChanged);
-    // _searchController.dispose();
+    _searchController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -145,188 +154,181 @@ class _HistoryPageState extends State<HistoryPage> {
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.black.withOpacity(0.5)),
           centerTitle: false,
-          title: showSearch == true
-              ? FadeInRight(
-                  child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    height: MediaQuery.of(context).size.height * 0.048,
-                    child: TextFormField(
-                      cursorColor: Colors.black,
-                      controller: _searchController,
-                      style: const TextStyle(
-                          color: Colors.black,
-                          fontFamily: 'Manrope',
-                          fontSize: 15),
-                      cursorHeight: 20,
-                      cursorWidth: 0.8,
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        hintStyle: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.grey,
-                          size: 20,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: const BorderSide(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (value.isEmpty) {
-                          _debouncer.run(() {
-                            filteredResults.clear();
-                            _isCheckedIn == null
-                                ? results!.results.length
-                                : filteredResults.isNotEmpty
-                                    ? filteredResults.length
-                                    : results!.checkedInCount;
-                            _getAllUsers(context);
-                          });
-                        } else {
-                          debugPrint("Query $value");
-                          if (Helper.isGreaterThan(value.length, 3)) {
-                            _debouncer.run(() {
-                              _onSearch(value, _isCheckedIn);
-                            });
-                          }
-                        }
-                      },
-                    ),
-                  ),
-                )
-              : FadeInLeft(
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_back_ios,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                        Text(
-                          'History',
-                          style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 18),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+          leading: InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: Icon(
+              Icons.arrow_back_ios,
+              color: Theme.of(context).primaryColor,
+              size: 24,
+            ),
+          ),
+          title: const Text(
+            'History',
+            style: TextStyle(
+                // color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 18),
+          ),
           actions: [
-            // showSearch == false
-            //     ? InkWell(
-            //         onTap: () {
-            //           setState(() {
-            //             showSearch = !showSearch;
-            //           });
-            //         },
-            //         child: const Padding(
-            //           padding: EdgeInsets.only(right: 8.0),
-            //           child: Icon(
-            //             Icons.search,
-            //             size: 29,
-            //           ),
-            //         ),
-            //       )
-            //     : InkWell(
-            //         onTap: () {
-            //           setState(() {
-            //             showSearch = !showSearch;
-            //           });
-            //         },
-            //         child: Padding(
-            //           padding: const EdgeInsets.only(right: 14.0),
-            //           child: Container(
-            //             height: 25,
-            //             width: 25,
-            //             decoration: BoxDecoration(
-            //                 color: Colors.red,
-            //                 borderRadius: BorderRadius.circular(60)),
-            //             child: const Icon(
-            //               Icons.close_outlined,
-            //               color: Colors.white,
-            //               size: 23,
-            //             ),
-            //           ),
-            //         ),
-            //       ),
-          
+            IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => AnalyticsPage(userData: results),
+                  ),
+                );
+              },
+              icon:const Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: const Icon(
+                  Icons.analytics_outlined,
+                  size: 28,
+                ),
+              ),
+              tooltip: 'View Analytics',
+            ),
           ],
         ),
         body: Column(
           children: [
-            // Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: HistoryPageSearch(onSearch: _onSearch),
-            // ),
+            const SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Radio<bool?>(
-                    value: null,
-                    groupValue: _isCheckedIn,
-                    onChanged: (value) async {
-                      setState(() {
-                        _isCheckedIn = value;
-                      });
-                      await _getAllUsers(context);
-                      _onSearch(_searchController.text, _isCheckedIn);
-                    },
+              padding: const EdgeInsets.symmetric(horizontal: 18.0),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.049,
+                child: TextFormField(
+                  cursorColor: Colors.black,
+                  controller: _searchController,
+                  style: const TextStyle(
+                      color: Colors.black, fontFamily: 'Manrope', fontSize: 15),
+                  cursorHeight: 20,
+                  cursorWidth: 0.8,
+                  decoration: InputDecoration(
+                    hintText: 'Search',
+                    hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                    suffixIcon: _showClearButton
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                                _showClearButton = false;
+                              });
+                              filteredResults.clear();
+                              _getAllUsers(context);
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1.5,
+                      ),
+                    ),
                   ),
-                  const Text('All'),
-                  Radio<bool?>(
-                    value: true,
-                    groupValue: _isCheckedIn,
-                    onChanged: (value) async {
-                      filteredResults.clear();
-                      setState(() {
-                        _isCheckedIn = value;
+                  onChanged: (value) {
+                    setState(() {
+                      _showClearButton = value.isNotEmpty;
+                    });
+                    if (value.isEmpty) {
+                      _debouncer.run(() {
+                        filteredResults.clear();
+                        _isCheckedIn == null
+                            ? results!.results.length
+                            : filteredResults.isNotEmpty
+                                ? filteredResults.length
+                                : results!.checkedInCount;
+                        _getAllUsers(context);
                       });
-                      _onSearch(_searchController.text, _isCheckedIn);
-                    },
+                    } else {
+                      debugPrint("Query $value");
+                      if (Helper.isGreaterThan(value.length, 3)) {
+                        _debouncer.run(() {
+                          _onSearch(value, _isCheckedIn);
+                        });
+                      }
+                    }
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: ToggleButtons(
+                borderRadius: BorderRadius.circular(8),
+                borderColor: Colors.grey.shade300,
+                selectedBorderColor: Theme.of(context).primaryColor,
+                fillColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Colors.grey.shade600,
+                selectedColor: Theme.of(context).primaryColor,
+                constraints: const BoxConstraints(
+                  minHeight: 40,
+                  minWidth: 100,
+                ),
+                isSelected: [
+                  _isCheckedIn == null,
+                  _isCheckedIn == true,
+                  _isCheckedIn == false,
+                ],
+                onPressed: (int index) async {
+                  setState(() {
+                    if (index == 0) {
+                      _isCheckedIn = null;
+                    } else if (index == 1) {
+                      _isCheckedIn = true;
+                    } else {
+                      _isCheckedIn = false;
+                    }
+                  });
+                  if (index == 0) {
+                    await _getAllUsers(context);
+                  }
+                  _onSearch(_searchController.text, _isCheckedIn);
+                },
+                children: const [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('All'),
                   ),
-                  const Text('Checked In'),
-                  Radio<bool?>(
-                    value: false,
-                    groupValue: _isCheckedIn,
-                    onChanged: (value) {
-                      filteredResults.clear();
-                      setState(() {
-                        _isCheckedIn = value;
-                      });
-                      _onSearch(_searchController.text, _isCheckedIn);
-                    },
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('Checked In'),
                   ),
-                  const Text('Not Checked In'),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('Not Checked In'),
+                  ),
                 ],
               ),
             ),
@@ -388,7 +390,7 @@ class _HistoryPageState extends State<HistoryPage> {
         debugPrint("RESP OK: ${results!.results.length}");
 
         List<TicketSuccessResponse> serverData = results?.results ?? [];
-           if (Helper.isServerDataUpdated(serverData, cachedData)) {
+        if (Helper.isServerDataUpdated(serverData, cachedData)) {
           debugPrint(
               "New or updated data is available! ${serverData.length} ${cachedData.length}");
           if (context.mounted) {
@@ -423,7 +425,8 @@ class _HistoryPageState extends State<HistoryPage> {
               final customer = ticket.customer;
               bool isCheckedIn = ticket.checkedIn ?? false;
 
-              return _buildUser(customer, isCheckedIn, ticket);
+              return _buildUser(
+                  context, customer, isCheckedIn, ticket, ticket.sId ?? 'N/A');
 
               // return _buildAttendanceCard(customer, isCheckedIn);
             },
@@ -497,178 +500,229 @@ _buildCheckedTotalWidget(UserResponse? results,
 }
 
 _buildUser(
+  BuildContext context,
   Customer? customer,
   bool isCheckedIn,
   TicketSuccessResponse ticket,
+  String ticketId,
 ) {
-  return Card(
-    elevation: 0.0,
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
     child: Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            alignment: Alignment.topLeft,
-            child: Text(
-              customer?.name.toString() ?? "No name",
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
-            ),
-          ),
-          Column(
-            children: [
-              Row(
-                children: [
-                  Image.asset(
-                    Assets.email,
-                    height: 18,
-                    width: 18,
-                  ),
-                  const SizedBox(width: 8),
-                  if (customer!.email != null)
-                    Expanded(
-                      child: Text(
-                        customer.email!.isEmpty || customer.email == null
-                            ? 'N/A'
-                            : customer.email.toString(),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                  if (customer.email == null)
-                    const Expanded(
-                      child: Text(
-                        'N/A',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Image.asset(
-                    Assets.phone,
-                    height: 18,
-                    width: 18,
-                    color: Colors.grey,
-                  ),
-                  const SizedBox(width: 8),
-                  if (customer.phone != null)
-                    Text(
-                      customer.phone!.isEmpty || customer.phone == null
-                          ? 'N/A'
-                          : customer.phone.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  if (customer.phone == null)
-                    const Text(
-                      'N/A',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-            ],
-          ),
-          const SizedBox(
-            height: 4,
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Text(
-                    isCheckedIn ? "Checked In" : "Not Checked In",
-                    style: TextStyle(
-                      color: isCheckedIn ? Colors.green : Colors.redAccent,
-                      fontWeight: FontWeight.w600,
-                    ),
+              Expanded(
+                child: Text(
+                  customer?.name.toString() ?? "No name",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
-                  const SizedBox(
-                    width: 2,
-                  ),
-                  Icon(
-                    isCheckedIn ? Icons.check_circle : Icons.cancel,
-                    color: isCheckedIn ? Colors.green : Colors.redAccent,
-                    size: 18,
-                  ),
-                ],
-              ),
-              CustomPopup(
-                showArrow: true,
-                content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Ticket Info",
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      InfoRichText(
-                        title: "Ticket Type",
-                        value: ticket.ticketType ?? 'N/A',
-                      ),
-                      const SizedBox(height: 4),
-                      InfoRichText(
-                        title: "Price",
-                        value: "GHS ${ticket.payment!.amount ?? "0.0"}",
-                      ),
-                      const SizedBox(height: 4),
-                      InfoRichText(
-                        title: "Coupon Code",
-                        value: ticket.couponCode!.isEmpty ||
-                                ticket.couponCode == null
-                            ? 'N/A'
-                            : ticket.couponCode!,
-                      ),
-                      const SizedBox(height: 4),
-                      InfoRichText(
-                        title: "Quantity",
-                        value: ticket.quantity == null
-                            ? 'N/A'
-                            : ticket.quantity.toString(),
-                      ),
-                      const SizedBox(height: 4),
-                      InfoRichText(
-                        title: "Squad Limit",
-                        value: ticket.squadLimit == null
-                            ? 'N/A'
-                            : ticket.squadLimit.toString(),
-                      ),
-                    ]),
-                child: const Icon(
-                  Icons.info,
-                  color: Colors.grey,
-                  size: 25,
                 ),
-              )
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isCheckedIn
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isCheckedIn ? Icons.check_circle : Icons.cancel,
+                      color: isCheckedIn ? Colors.green : Colors.redAccent,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isCheckedIn ? "Checked In" : "Not Checked In",
+                      style: TextStyle(
+                        color: isCheckedIn ? Colors.green : Colors.redAccent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Image.asset(
+                Assets.email,
+                height: 18,
+                width: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  customer?.email?.isEmpty ?? true
+                      ? 'N/A'
+                      : customer!.email.toString(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Image.asset(
+                Assets.phone,
+                height: 18,
+                width: 18,
+                color: Colors.grey,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  customer?.phone?.isEmpty ?? true
+                      ? 'N/A'
+                      : customer!.phone.toString(),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.grey.shade200, thickness: 1),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: CustomPopup(
+              showArrow: true,
+              content: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.confirmation_number,
+                            size: 20, color: Theme.of(context).primaryColor),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "Ticket Details",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTicketInfoRow(
+                      Icons.category_outlined,
+                      "Type",
+                      ticket.ticketType ?? 'N/A',
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTicketInfoRow(
+                      Icons.currency_exchange,
+                      "Price",
+                      "GHS ${ticket.payment!.amount ?? "0.0"}",
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTicketInfoRow(
+                      Icons.local_offer_outlined,
+                      "Coupon",
+                      ticket.couponCode!.isEmpty || ticket.couponCode == null
+                          ? 'N/A'
+                          : ticket.couponCode!,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTicketInfoRow(
+                      Icons.shopping_cart_outlined,
+                      "Quantity",
+                      ticket.quantity == null
+                          ? 'N/A'
+                          : ticket.quantity.toString(),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTicketInfoRow(
+                      Icons.group_outlined,
+                      "Squad Limit",
+                      ticket.squadLimit == null
+                          ? 'N/A'
+                          : ticket.squadLimit.toString(),
+                    ),
+                  ],
+                ),
+              ),
+              child: const Icon(
+                Icons.info_outline,
+                color: Colors.grey,
+                size: 24,
+              ),
+            ),
           ),
         ],
       ),
     ),
+  );
+}
+
+Widget _buildTicketInfoRow(IconData icon, String label, String value) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(icon, size: 18, color: Colors.grey.shade600),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ],
   );
 }
 
@@ -730,7 +784,7 @@ _buildAttendanceCard(
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  customer!.email ?? '',
+                  customer.email ?? '',
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black54,

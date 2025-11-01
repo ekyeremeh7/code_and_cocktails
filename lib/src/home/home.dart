@@ -50,8 +50,8 @@ class _HomePageState extends State<HomePage> {
             actions: [
               GestureDetector(
                 onTap: () {
-                  final SembastService _sembastService = SembastService();
-                  _sembastService.clearUserStore();
+                  final SembastService sembastService = SembastService();
+                  sembastService.clearUserStore();
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (builder) => const StatsPage(result: null)));
                 },
@@ -59,8 +59,8 @@ class _HomePageState extends State<HomePage> {
                   padding:
                       const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
                   child: Icon(
-                    Icons.account_balance_wallet_rounded,
-                    size: 35,
+                     Icons.qr_code_scanner,
+                    size: 30,
                     color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
                 ),
@@ -90,6 +90,20 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  ),
+                  child: Icon(
+                    Icons.qr_code_scanner,
+                    size: 80,
+                    color: Theme.of(context).primaryColor.withOpacity(0.5),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 Text(
                   "Scan new ticket",
                   style: TextStyle(

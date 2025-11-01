@@ -107,7 +107,9 @@ class VerifyingTicketSingleton {
   }
 
   Future<List<TicketSuccessResponse>?> getAllTickets() async {
-    Response response = await dio.get(Urls.getAllTickets);
+    Response response = await dio.get(
+      Urls.getAllTickets,
+    );
     print(response.realUri);
     print(response.data.toString());
     print(
@@ -118,7 +120,7 @@ class VerifyingTicketSingleton {
     }
 
     if (response.statusCode == 200) {
-      List data = response.data;
+      List data = response.data['tickets'];
 
       List<TicketSuccessResponse> allItems = data
           .map((element) => TicketSuccessResponse.fromJson(element))
@@ -132,7 +134,9 @@ class VerifyingTicketSingleton {
 
   Future<UserResponse?> getAllUsers() async {
     try {
-      Response response = await dio.get(Urls.getAllUsers);
+      Response response = await dio.get(
+        Urls.getAllUsers,
+      );
       print(response.realUri);
       print(response.data.toString());
       print(

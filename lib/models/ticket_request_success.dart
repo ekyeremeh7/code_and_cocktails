@@ -34,8 +34,8 @@ class TicketSuccessResponse {
     event = json['event'];
     ticketType = json['ticketType'];
     couponCode = json['couponCode'];
-    quantity = json['quantity'];
-    squadLimit = json['squadLimit'];
+    quantity = json['quantity'] is double ? (json['quantity'] as double).toInt() : json['quantity'] as int?;
+    squadLimit = json['squadLimit'] is double ? (json['squadLimit'] as double).toInt() : json['squadLimit'] as int?;
     qrCodeBase64 = json['qrCodeBase64'];
     customer =
         json['customer'] != null ? Customer.fromJson(json['customer']) : null;
@@ -43,7 +43,7 @@ class TicketSuccessResponse {
         json['payment'] != null ? Payment.fromJson(json['payment']) : null;
     createdAt = json['createdAt'];
     updatedAt = json['updatedAt'];
-    iV = json['__v'];
+    iV = json['__v'] is double ? (json['__v'] as double).toInt() : json['__v'] as int?;
     checkedIn = json['checkedIn'];
   }
 
@@ -74,13 +74,14 @@ class Customer {
   String? name;
   String? email;
   String? phone;
-
-  Customer({this.name, this.email, this.phone});
+  String? id;
+  Customer({this.name, this.email, this.phone, this.id});
 
   Customer.fromJson(Map<String, dynamic> json) {
     name = json['name'];
     email = json['email'];
     phone = json['phone'];
+    id = json['id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -88,6 +89,7 @@ class Customer {
     data['name'] = name;
     data['email'] = email;
     data['phone'] = phone;
+    data['id'] = id;
     return data;
   }
 }
@@ -103,7 +105,7 @@ class Payment {
       {this.amount, this.method, this.currency, this.status, this.reference});
 
   Payment.fromJson(Map<String, dynamic> json) {
-    amount = json['amount'];
+    amount = json['amount'] is double ? (json['amount'] as double).toInt() : json['amount'] as int?;
     method = json['method'];
     currency = json['currency'];
     status = json['status'];

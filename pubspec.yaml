@@ -48,6 +48,7 @@ dependencies:
   collection: ^1.18.0
   crypto: ^3.0.6
   animate_do: ^3.3.4
+  fl_chart: ^0.65.0
 
 
 dev_dependencies:
