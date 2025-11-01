@@ -798,11 +798,13 @@ _buildAttendanceCard(
             children: [
               const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
               const SizedBox(width: 8),
-              Text(
-                customer.phone ?? 'N/A',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
+              Expanded(
+                child: Text(
+                  (customer.phone?.isEmpty ?? true) ? 'N/A' : customer.phone!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
             ],

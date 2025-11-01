@@ -117,12 +117,16 @@ class _ResultsDataState extends State<ResultsData> {
             _buildInfoRow(
               Icons.phone_outlined,
               'Phone',
-              widget.successResponse?.customer?.phone ?? 'N/A',
+              (widget.successResponse?.customer?.phone?.isEmpty ?? true)
+                  ? 'N/A'
+                  : widget.successResponse!.customer!.phone!,
             ),
             _buildInfoRow(
               Icons.email_outlined,
               'Email',
-              widget.successResponse?.customer?.email ?? 'N/A',
+              (widget.successResponse?.customer?.email?.isEmpty ?? true)
+                  ? 'N/A'
+                  : widget.successResponse!.customer!.email!,
             ),
             const SizedBox(height: 24),
 
