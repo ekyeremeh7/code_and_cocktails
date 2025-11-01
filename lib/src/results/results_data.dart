@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'dart:convert';
 import '../../models/ticket_request_success.dart';
@@ -22,151 +21,266 @@ class _ResultsDataState extends State<ResultsData> {
 
   @override
   Widget build(BuildContext context) {
-      String base64String = widget.successResponse?.qrCodeBase64 ?? '';
+    String base64String = widget.successResponse?.qrCodeBase64 ?? '';
     Image? qrImage;
-    if(base64String.isNotEmpty){
+    if (base64String.isNotEmpty) {
       qrImage = convertBase64StringToImage(base64String.split(',')[1]);
     }
-    
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12),
-      child: Card(
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(.2),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              const SizedBox(
-                height: 20,
+      padding: const EdgeInsets.all(16.0),
+      child: SingleChildScrollView(
+        child: base64String.isNotEmpty == true
+            ? _buildSuccessCard(qrImage)
+            : _buildErrorCard(context),
+      ),
+    );
+  }
+
+  Widget _buildSuccessCard(Image? qrImage) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            // QR Code
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
               ),
-            base64String.isNotEmpty ==true?
-              SizedBox(
-                height: 100,
-                width: 100,
-                child: Center(
-                  child: qrImage,
-                ),
-              ):const SizedBox(),
-              const SizedBox(
-                height: 30,
+              child: SizedBox(
+                height: 120,
+                width: 120,
+                child: Center(child: qrImage),
               ),
-            base64String.isNotEmpty ==true?
-              Column(
+            ),
+            const SizedBox(height: 24),
+
+            // Ticket Type
+            Text(
+              widget.successResponse?.ticketType ?? "Ticket Type",
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Status Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-              Text(
-                widget.successResponse?.ticketType ?? "Ticket Type",
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.successResponse?.payment?.status?.toUpperCase() ??
+                        'VERIFIED',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(
-                height: 30,
+            ),
+            const SizedBox(height: 32),
+
+            // Customer Details Section
+            _buildSectionTitle('Customer Details'),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.person_outline,
+              'Name',
+              widget.successResponse?.customer?.name ?? 'N/A',
+            ),
+            _buildInfoRow(
+              Icons.phone_outlined,
+              'Phone',
+              widget.successResponse?.customer?.phone ?? 'N/A',
+            ),
+            _buildInfoRow(
+              Icons.email_outlined,
+              'Email',
+              widget.successResponse?.customer?.email ?? 'N/A',
+            ),
+            const SizedBox(height: 24),
+
+            // Ticket Details Section
+            _buildSectionTitle('Ticket Details'),
+            const SizedBox(height: 16),
+            _buildInfoRow(
+              Icons.confirmation_number_outlined,
+              'Reference',
+              widget.successResponse?.payment?.reference ?? 'N/A',
+            ),
+            _buildInfoRow(
+              Icons.shopping_cart_outlined,
+              'Quantity',
+              widget.successResponse?.quantity.toString() ?? '0',
+            ),
+            _buildInfoRow(
+              Icons.group_outlined,
+              'Squad Limit',
+              widget.successResponse?.squadLimit.toString() ?? '0',
+            ),
+            const SizedBox(height: 32),
+
+            // Price Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
               ),
-              elRow(
-                title: "STATUS",
-                color: const Color.fromARGB(255, 3, 211, 9),
-                value: widget.successResponse?.payment?.status?.toUpperCase() ?? '',
-              ),
-              elRow(
-                title: "reference".toUpperCase(),
-                value: widget.successResponse?.payment?.reference ?? '',
-              ),
-              elRow(
-                  title: "CUSTOMER",
-                  value: widget.successResponse?.customer?.name ?? ''),
-              elRow(
-                  title: '',
-                  value: widget.successResponse?.customer?.phone ?? ''),
-              elRow(
-                  title: '',
-                  value: widget.successResponse?.customer?.email ?? ''),
-              elRow(
-                title: "QUANTITY",
-                value: widget.successResponse?.quantity.toString() ?? '',
-              ),
-              elRow(
-                title: 'SQUAD LIMIT',
-                value: widget.successResponse?.squadLimit.toString() ?? '',
-              ),
-              const SizedBox(
-                height: 30,
-              ),
-              Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(
-                    height: 30,
-                  ),
                   Text(
-                    "GHS ${widget.successResponse?.payment?.amount ?? ''}",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    "GHS ${widget.successResponse?.payment?.amount ?? '0'}",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
                   ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  SizedBox(
-                    width: 60,
-                    height: 60,
-                    child: SvgPicture.asset("assets/ticket-77dfce33.svg"),
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.confirmation_number,
+                    color: Theme.of(context).primaryColor,
+                    size: 32,
                   ),
                 ],
               ),
-                ],
-              ) : Column(
-                children: [
-                  SizedBox(width: MediaQuery.of(context).size.width,),
-                  Container(
-                    width: 180,
-                    height: 180,
-                    child: Image.asset("assets/tickets.png"),
-                  ),
-    const SizedBox(
-                    height: 80,
-                  ),
-                  Text("Error verifying ticket",style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold
-                            ),),
-                ],
-              ),
-
-              const SizedBox(
-                height: 100,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );
   }
 
-  Widget elRow({String? title, String? value,Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildErrorCard(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 60),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            title ?? "data",
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).disabledColor.withOpacity(.3),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.error_outline,
+              size: 80,
+              color: Colors.red,
             ),
           ),
-          Flexible(
-            child: SizedBox(
-              width: (MediaQuery.of(context).size.width / 1.5) - 32,
-              child: Text(
-                value ?? "Value",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400,color: 
-                color),
-              ),
+          const SizedBox(height: 32),
+          const Text(
+            "Error Verifying Ticket",
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Please ensure the QR code is valid and try again",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 16,
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey.shade600),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 }
 
 

@@ -1,6 +1,4 @@
 import 'package:code_and_cocktails/requests/verifying_ticket.dart';
-import 'package:code_and_cocktails/src/home/home.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
@@ -56,14 +54,15 @@ class _ResultsPageState extends State<ResultsPage> {
               Navigator.pop(context);
             },
             icon: Icon(
-              Icons.chevron_left,
+              Icons.arrow_back_ios,
               color: Theme.of(context).primaryColor,
+              size: 20,
             )),
         elevation: 0,
         backgroundColor: Theme.of(context).canvasColor,
         centerTitle: true,
         title: Text(
-          "Ticket verification",
+          "Ticket Verification",
           style: TextStyle(
             fontSize: 18,
             color: Theme.of(context).primaryColor,
@@ -179,11 +178,14 @@ class _ResultsPageState extends State<ResultsPage> {
   }
 
   loader() {
-    return const SizedBox(
-      width: 20,
-      height: 20,
-      child: CircularProgressIndicator(
-        strokeWidth: 3,
+    return const Padding(
+      padding: EdgeInsets.only(top: 20.0),
+      child: SizedBox(
+        width: 30,
+        height: 30,
+        child: CircularProgressIndicator(
+          strokeWidth: 3,
+        ),
       ),
     );
   }
