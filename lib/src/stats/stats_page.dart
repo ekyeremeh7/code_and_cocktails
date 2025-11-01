@@ -90,17 +90,20 @@ class _StatsPageState extends State<StatsPage> {
 
   Future<void> _loadTickets() async {
     Future.microtask(() async {
-      // Load cached data first
+      // Load cached data first - this will set verifyingTicket = false if cache exists
       List<TicketSuccessResponse> cachedTickets =
           await _loadCachedTickets();
+
+      // Only show loading if there's no cache
+      if (cachedTickets.isEmpty) {
+        setState(() {
+          verifyingTicket = true;
+        });
+      }
 
       // Then fetch from server
       VerifyingTicketSingleton verifyingTicketSingleton =
           VerifyingTicketSingleton();
-
-      setState(() {
-        verifyingTicket = true;
-      });
 
       results = await verifyingTicketSingleton.getAllTickets();
 
