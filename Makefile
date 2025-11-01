@@ -16,3 +16,18 @@ universal:
 	flutter pub get
 	@echo "[+] Building universal apk"
 	flutter build apk --release 
+
+# Clean iOS dependencies
+_ios-clean:
+	@echo "[+] Cleaning iOS dependencies..."
+	@cd ios/ && rm -rf Podfile.lock Pods
+	
+ipa-prod-testflight: _ios-clean
+	@echo "[+] Building production IPA for TestFlight..."
+	@$(MAKE) _ios-pod-install
+	fvm flutter clean
+	fvm flutter pub get
+	fvm flutter build ipa --export-options-plist=ios/ExportOptions.plist --release
+	@echo "[+] Uploading to TestFlight via App Store Connect API..."
+	xcrun altool --upload-app --type ios -f build/ios/ipa/*.ipa --apiKey 3995SSD6VR --apiIssuer 975dbc96-75bf-4396-b398-a5b7fc4417f0 
+	@echo "[+] Upload completed successfully!"

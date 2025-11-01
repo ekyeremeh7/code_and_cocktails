@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  xmlns:tools="http://schemas.android.com/tools" package="com.example.code_and_cocktails">
+  xmlns:tools="http://schemas.android.com/tools" package="com.company.codeandcocktails">
     
      <queries>
         <intent>
