@@ -284,7 +284,6 @@ class _CodeScannerState extends State<CodeScanner> {
       });
 
       addingScannedInvoicesToMyAccount++;
-      Map dataToSend = {"data": result!.code!};
 
       Navigator.pop(context);
 
