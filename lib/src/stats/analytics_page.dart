@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:flutter_popup/flutter_popup.dart';
 import '../../models/user_model.dart';
 
 class AnimatedPieChart extends StatefulWidget {
