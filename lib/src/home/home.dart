@@ -1,9 +1,7 @@
-import 'package:code_and_cocktails/src/results/results.dart';
 import 'package:code_and_cocktails/src/scan/scan.dart';
 import 'package:code_and_cocktails/src/stats/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import '../../shared/services/sembast_service.dart';
 import '../stats/history_page.dart';

@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../models/err_success_model.dart';
-import '../../models/ticket_request_error.dart';
 
 class ApiException implements Exception {
   ApiException.fromDioException(DioException dioException) {
