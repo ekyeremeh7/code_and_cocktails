@@ -41,11 +41,15 @@ class _CodeScannerState extends State<CodeScanner> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       Future.delayed(const Duration(milliseconds: 10), () async {
-        if (Platform.isAndroid) {
-          await controller!.pauseCamera();
+        if (controller != null) {
+          if (Platform.isAndroid) {
+            await controller!.pauseCamera();
+          }
+          await controller?.resumeCamera();
+          if (mounted) {
+            setState(() {});
+          }
         }
-        await controller?.resumeCamera();
-        setState(() {});
       });
     });
   }

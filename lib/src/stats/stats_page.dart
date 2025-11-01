@@ -1,9 +1,12 @@
-import 'package:code_and_cocktails/src/home/home.dart';
+import 'package:code_and_cocktails/src/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import '../../models/ticket_request_success.dart';
 import '../../requests/verifying_ticket.dart';
+import '../../shared/services/sembast_service.dart';
+import '../../shared/utils/helper.dart';
+import '../../shared/utils/styled_toast/selected_toast.dart';
 
 class StatsPage extends StatefulWidget {
   final Barcode? result;
@@ -18,6 +21,7 @@ class _StatsPageState extends State<StatsPage> {
   int selectedTicketIndex = 0;
   bool? verifyingTicket;
   List<TicketSuccessResponse>? results;
+  final SembastService _sembastService = SembastService();
 
   List<Map> ticketTypes = [
     {"name": "All", "price": 0, "currency": "", "ticket_count": 0},
@@ -50,7 +54,47 @@ class _StatsPageState extends State<StatsPage> {
   @override
   void initState() {
     super.initState();
+    _loadTickets();
+  }
+
+  Future<List<TicketSuccessResponse>> _loadCachedTickets() async {
+    try {
+      final cachedData = await _sembastService.getTicketsResponse();
+      if (cachedData != null && cachedData['tickets'] != null) {
+        List<TicketSuccessResponse> cachedTickets =
+            (cachedData['tickets'] as List)
+                .map((ticket) => TicketSuccessResponse.fromJson(ticket))
+                .toList();
+        if (mounted) {
+          setState(() {
+            results = cachedTickets;
+            verifyingTicket = false;
+          });
+        }
+        return cachedTickets;
+      }
+    } catch (e) {
+      debugPrint("Error loading cached tickets: $e");
+    }
+    return [];
+  }
+
+  Future<void> _cacheTickets(List<TicketSuccessResponse> tickets) async {
+    try {
+      final ticketsJson = tickets.map((ticket) => ticket.toJson()).toList();
+      await _sembastService.saveTicketsResponse(ticketsJson);
+    } catch (e) {
+      debugPrint("Error caching tickets: $e");
+    }
+  }
+
+  Future<void> _loadTickets() async {
     Future.microtask(() async {
+      // Load cached data first
+      List<TicketSuccessResponse> cachedTickets =
+          await _loadCachedTickets();
+
+      // Then fetch from server
       VerifyingTicketSingleton verifyingTicketSingleton =
           VerifyingTicketSingleton();
 
@@ -68,13 +112,21 @@ class _StatsPageState extends State<StatsPage> {
       }
 
       if (results != null) {
-        print("RESP OK:");
+        debugPrint("RESP OK:");
+        // Check if data has been updated
+        if (Helper.isServerDataUpdated(results!, cachedTickets)) {
+          debugPrint(
+              "New or updated ticket data available! ${results!.length} ${cachedTickets.length}");
+          _cacheTickets(results!);
+          if (context.mounted) {
+            failed(context, 'All Tickets updated');
+          }
+        }
         setState(() {
           verifyingTicket = false;
         });
       } else {
-        print("RESP ERR:");
-
+        debugPrint("RESP ERR:");
         setState(() {
           verifyingTicket = null;
         });

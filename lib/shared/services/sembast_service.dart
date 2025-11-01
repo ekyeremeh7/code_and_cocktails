@@ -8,6 +8,7 @@ class SembastService {
 
   Database? _database;
   final _userStore = intMapStoreFactory.store('userStore');
+  final _ticketsStore = intMapStoreFactory.store('ticketsStore');
 
   SembastService._internal();
 
@@ -47,6 +48,29 @@ class SembastService {
       debugPrint("Successfully cleared store");
     } catch (e) {
       debugPrint("err clearing store ${e.toString()}");
+    }
+  }
+
+  Future<void> saveTicketsResponse(List<Map<String, dynamic>> tickets) async {
+    await clearStore(_ticketsStore);
+    await _ticketsStore.add(_database!, {'tickets': tickets});
+    debugPrint("Saving tickets to cache...");
+  }
+
+  Future<Map<String, dynamic>?> getTicketsResponse() async {
+    final records = await _ticketsStore.find(_database!);
+    if (records.isNotEmpty) {
+      return records.first.value as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  clearTicketsStore() async {
+    try {
+      await clearStore(_ticketsStore);
+      debugPrint("Successfully cleared tickets store");
+    } catch (e) {
+      debugPrint("err clearing tickets store ${e.toString()}");
     }
   }
 }
