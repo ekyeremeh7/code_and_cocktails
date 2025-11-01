@@ -120,7 +120,7 @@ class VerifyingTicketSingleton {
     }
 
     if (response.statusCode == 200) {
-      List data = response.data;
+      List data = response.data['tickets'];
 
       List<TicketSuccessResponse> allItems = data
           .map((element) => TicketSuccessResponse.fromJson(element))
