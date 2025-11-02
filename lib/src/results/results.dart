@@ -1,8 +1,8 @@
-import 'package:code_and_cocktails/requests/verifying_ticket.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:code_and_cocktails/api/tickets_api.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-
 import '../../models/err_success_model.dart';
 import '../../shared/utils/enums.dart';
 import 'results_data.dart';
@@ -139,14 +139,13 @@ class _ResultsPageState extends State<ResultsPage> {
 
   _verifyingTicket() {
     Future.microtask(() async {
-      VerifyingTicketSingleton verifyingTicketSingleton =
-          VerifyingTicketSingleton();
+      TicketSingleton ticketSingleton = TicketSingleton();
 
       setState(() {
         verifyingTicket = VerificationStatus.loading;
       });
 
-      results = await verifyingTicketSingleton.verifyMyTicket(
+      results = await ticketSingleton.verifyMyTicket(
           ticketID: widget.result?.code ?? '');
       debugPrint("Results ${results!.ticketSuccess}");
       if (results == null) {

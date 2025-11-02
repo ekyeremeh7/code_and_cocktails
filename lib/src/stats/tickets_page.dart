@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 import '../../models/ticket_request_success.dart';
-import '../../requests/verifying_ticket.dart';
+import '../../api/tickets_api.dart';
 import '../../shared/services/sembast_service.dart';
 import '../../shared/utils/helper.dart';
 import '../../shared/utils/styled_toast/selected_toast.dart';
@@ -107,10 +107,9 @@ class _TicketsPageState extends State<TicketsPage> {
       }
 
       // Then fetch from server
-      VerifyingTicketSingleton verifyingTicketSingleton =
-          VerifyingTicketSingleton();
+      TicketSingleton ticketSingleton = TicketSingleton();
 
-      results = await verifyingTicketSingleton.getAllTickets();
+      results = await ticketSingleton.getAllTickets();
 
       if (results == null) {
         setState(() {

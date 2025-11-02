@@ -5,7 +5,7 @@ import 'package:flutter_popup/flutter_popup.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import '../../models/ticket_request_success.dart';
 import '../../models/user_model.dart';
-import '../../requests/verifying_ticket.dart';
+import '../../api/tickets_api.dart';
 import '../../shared/services/sembast_service.dart';
 import '../../shared/utils/assets.dart';
 import '../../shared/utils/debouncer.dart';
@@ -356,13 +356,13 @@ class _HistoryPageState extends State<HistoryPage> {
     Future.microtask(() async {
       // Existing working ccode
 
-      // VerifyingTicketSingleton verifyingTicketSingleton =
-      //     VerifyingTicketSingleton();
+      // TicketSingleton TicketSingleton =
+      //     TicketSingleton();
       // setState(() {
       //   userStatus = UserStatus.loading;
       // });
 
-      // results = await verifyingTicketSingleton.getAllUsers();
+      // results = await TicketSingleton.getAllUsers();
       // debugPrint(
       //     "CheckInCount ${results!.checkedInCount.toString()} totalUsers ${results!.totalCount.toString()}");
       // if (results == null) {
@@ -380,12 +380,11 @@ class _HistoryPageState extends State<HistoryPage> {
       // }
 
       //new change
-      VerifyingTicketSingleton verifyingTicketSingleton =
-          VerifyingTicketSingleton();
+      TicketSingleton ticketSingleton = TicketSingleton();
       await userFallback();
       List<TicketSuccessResponse> cachedData = results?.results ?? [];
 
-      results = await verifyingTicketSingleton.getAllUsers();
+      results = await ticketSingleton.getAllUsers();
       if (results == null) {
         setState(() {
           userStatus = UserStatus.error;
