@@ -25,7 +25,7 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: widget.height,
+      // height: widget.height,
       child: PieChart(
         dataMap: widget.dataMap,
         animationDuration: const Duration(milliseconds: 1500),
@@ -35,6 +35,7 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> {
         chartRadius: widget.height / 2,
         legendOptions: const LegendOptions(
           showLegends: false,
+          
         ),
         chartValuesOptions: const ChartValuesOptions(
           showChartValueBackground: false,
@@ -43,9 +44,8 @@ class _AnimatedPieChartState extends State<AnimatedPieChart> {
           showChartValuesOutside: false,
           decimalPlaces: 1,
         ),
-        centerText: widget.dataMap.length == 2
-            ? 'Ticket\nStats'
-            : 'Ticket\nTypes',
+        centerText:
+            widget.dataMap.length == 2 ? 'Ticket\nStats' : 'Ticket\nTypes',
         centerTextStyle: const TextStyle(
           color: Colors.black87,
           fontSize: 14,
@@ -66,9 +66,15 @@ class AnalyticsPage extends StatelessWidget {
     if (userData == null || userData!.results.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Analytics'),
+          title:  Text(
+            'Analytics',
+            style: TextStyle(
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 20),
+            icon: const Icon(Icons.arrow_back, size: 26),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -80,9 +86,15 @@ class AnalyticsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analytics'),
+        title:  Text(
+          'Analytics',
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 20),
+          icon: const Icon(Icons.arrow_back, size: 26),
           onPressed: () => Navigator.pop(context),
         ),
         elevation: 0,
@@ -200,13 +212,13 @@ class AnalyticsPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 30),
             ZoomIn(
               delay: const Duration(milliseconds: 300),
               child: AnimatedPieChart(
-                height: 171,
+                height: 450,
                 dataMap: dataMap,
-                colorList: [Colors.green, Colors.red],
+                colorList: const [Colors.green, Colors.red],
               ),
             ),
           ],
@@ -215,11 +227,12 @@ class AnalyticsPage extends StatelessWidget {
     );
   }
 
-  void _showCheckInDetails(BuildContext context, int checkedIn, int notCheckedIn,
-      double checkedInPercentage, int index) {
+  void _showCheckInDetails(BuildContext context, int checkedIn,
+      int notCheckedIn, double checkedInPercentage, int index) {
     final isCheckedIn = index == 0;
     final count = isCheckedIn ? checkedIn : notCheckedIn;
-    final percentage = isCheckedIn ? checkedInPercentage : (100 - checkedInPercentage);
+    final percentage =
+        isCheckedIn ? checkedInPercentage : (100 - checkedInPercentage);
     final title = isCheckedIn ? 'Checked In' : 'Not Checked In';
     final color = isCheckedIn ? Colors.green : Colors.red;
 
@@ -229,7 +242,8 @@ class AnalyticsPage extends StatelessWidget {
       builder: (context) => ScaleTransition(
         scale: Tween<double>(begin: 0.0, end: 1.0).animate(
           CurvedAnimation(
-            parent: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+            parent:
+                ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
             curve: Curves.easeOutBack,
           ),
         ),
@@ -271,8 +285,8 @@ class AnalyticsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 16, horizontal: 20),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -353,11 +367,13 @@ class AnalyticsPage extends StatelessWidget {
     );
   }
 
-  void _showTicketTypeDetails(BuildContext context,
+  void _showTicketTypeDetails(
+      BuildContext context,
       List<MapEntry<String, int>> ticketTypeEntries,
-      Map<String, int> ticketTypeCount, int index) {
+      Map<String, int> ticketTypeCount,
+      int index) {
     if (index >= ticketTypeEntries.length) return;
-    
+
     final entry = ticketTypeEntries[index];
     final typeName = entry.key;
     final count = entry.value;
@@ -386,7 +402,8 @@ class AnalyticsPage extends StatelessWidget {
       builder: (context) => ScaleTransition(
         scale: Tween<double>(begin: 0.0, end: 1.0).animate(
           CurvedAnimation(
-            parent: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+            parent:
+                ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
             curve: Curves.easeOutBack,
           ),
         ),
@@ -429,8 +446,8 @@ class AnalyticsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 16, horizontal: 20),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -514,8 +531,9 @@ class AnalyticsPage extends StatelessWidget {
     }
 
     final ticketTypeEntries = ticketTypeCount.entries.toList();
-    final colorList = ticketTypeEntries.map((entry) => typeColors[entry.key]!).toList();
-    
+    final colorList =
+        ticketTypeEntries.map((entry) => typeColors[entry.key]!).toList();
+
     final dataMap = <String, double>{};
     for (var entry in ticketTypeEntries) {
       dataMap[entry.key] = entry.value.toDouble();
@@ -536,10 +554,13 @@ class AnalyticsPage extends StatelessWidget {
       ),
       child: Column(
         children: [
+          const SizedBox(
+            height: 20,
+          ),
           ZoomIn(
             delay: const Duration(milliseconds: 500),
             child: AnimatedPieChart(
-              height: 250,
+              height: 450,
               dataMap: dataMap,
               colorList: colorList,
             ),
@@ -549,7 +570,7 @@ class AnalyticsPage extends StatelessWidget {
             final index = mapEntry.key;
             final entry = mapEntry.value;
             return FadeInLeft(
-              delay: Duration(milliseconds: 600 + ((index as int) * 50)),
+              delay: Duration(milliseconds: 600 + ((index) * 50)),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
@@ -592,17 +613,34 @@ class AnalyticsPage extends StatelessWidget {
 
   Widget _buildTopInsights(BuildContext context, UserResponse data) {
     final Map<String, int> ticketTypeCount = {};
+    final Map<String, int> buyerCount = {};
+    final Map<String, String> emailToName = {};
 
     for (var ticket in data.results) {
       final type = ticket.ticketType ?? 'Unknown';
       ticketTypeCount[type] = (ticketTypeCount[type] ?? 0) + 1;
+
+      // Count tickets by buyer email and store name mapping
+      final buyerEmail = ticket.customer?.email ?? 'Unknown';
+      final buyerName = ticket.customer?.name ?? 'Unknown';
+      buyerCount[buyerEmail] = (buyerCount[buyerEmail] ?? 0) + 1;
+      if (buyerEmail != 'Unknown' && buyerName != 'Unknown') {
+        emailToName[buyerEmail] = buyerName;
+      }
     }
 
     final sortedTypes = ticketTypeCount.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
+    final sortedBuyers = buyerCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
     final topTicketType =
         sortedTypes.isNotEmpty ? sortedTypes.first.key : 'N/A';
+    final topBuyerEmail = sortedBuyers.isNotEmpty ? sortedBuyers.first.key : 'N/A';
+    final topBuyerCount =
+        sortedBuyers.isNotEmpty ? sortedBuyers.first.value : 0;
+    final topBuyerName = emailToName[topBuyerEmail] ?? topBuyerEmail;
     final checkedIn = data.checkedInCount;
     final total = data.totalCount;
 
@@ -624,6 +662,16 @@ class AnalyticsPage extends StatelessWidget {
           FadeInRight(
             delay: const Duration(milliseconds: 700),
             child: _buildInsightRow(
+              Icons.person_outline,
+              'Top Buyer',
+              '$topBuyerName ($topBuyerCount tickets)',
+              Colors.teal,
+            ),
+          ),
+          const Divider(height: 24),
+          FadeInRight(
+            delay: const Duration(milliseconds: 750),
+            child: _buildInsightRow(
               Icons.local_fire_department,
               'Most Popular Ticket',
               topTicketType,
@@ -632,7 +680,7 @@ class AnalyticsPage extends StatelessWidget {
           ),
           const Divider(height: 24),
           FadeInRight(
-            delay: const Duration(milliseconds: 750),
+            delay: const Duration(milliseconds: 800),
             child: _buildInsightRow(
               Icons.people_outline,
               'Total Attendees',
@@ -642,7 +690,7 @@ class AnalyticsPage extends StatelessWidget {
           ),
           const Divider(height: 24),
           FadeInRight(
-            delay: const Duration(milliseconds: 800),
+            delay: const Duration(milliseconds: 850),
             child: _buildInsightRow(
               Icons.percent,
               'Check-in Rate',
@@ -652,7 +700,7 @@ class AnalyticsPage extends StatelessWidget {
           ),
           const Divider(height: 24),
           FadeInRight(
-            delay: const Duration(milliseconds: 850),
+            delay: const Duration(milliseconds: 900),
             child: _buildInsightRow(
               Icons.category,
               'Ticket Varieties',

@@ -1,10 +1,10 @@
 import 'package:code_and_cocktails/src/scan/scan.dart';
-import 'package:code_and_cocktails/src/stats/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../shared/services/sembast_service.dart';
-import '../stats/history_page.dart';
+import '../stats/tickets_page.dart';
+import '../stats/users_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -51,13 +51,13 @@ class _HomePageState extends State<HomePage> {
                   final SembastService sembastService = SembastService();
                   sembastService.clearUserStore();
                   Navigator.of(context).push(MaterialPageRoute(
-                      builder: (builder) => const StatsPage(result: null)));
+                      builder: (builder) => const TicketsPage(result: null)));
                 },
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8.0, horizontal: 0),
                   child: Icon(
-                     Icons.qr_code_scanner,
+                    Icons.qr_code_scanner,
                     size: 30,
                     color: Theme.of(context).disabledColor.withOpacity(.6),
                   ),
