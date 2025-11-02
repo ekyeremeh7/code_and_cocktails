@@ -1,4 +1,4 @@
-import 'package:code_and_cocktails/src/scan/scan.dart';
+import 'package:code_and_cocktails/src/scanner/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 

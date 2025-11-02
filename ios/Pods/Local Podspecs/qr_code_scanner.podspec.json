@@ -16,12 +16,8 @@
   "source_files": "Classes/**/*",
   "public_header_files": "Classes/**/*.h",
   "dependencies": {
-    "Flutter": [
-
-    ],
-    "MTBBarcodeScanner": [
-
-    ]
+    "Flutter": [],
+    "MTBBarcodeScanner": []
   },
   "platforms": {
     "ios": "8.0"
