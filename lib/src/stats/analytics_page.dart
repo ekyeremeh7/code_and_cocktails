@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../models/user_model.dart';
 
 class AnimatedPieChart extends StatefulWidget {
-  final List<PieChartSectionData> sections;
+  final Map<String, double> dataMap;
+  final List<Color> colorList;
   final double height;
-  final int sectionsSpace;
-  final double centerSpaceRadius;
   final Function(int)? onSectionTapped;
 
   const AnimatedPieChart({
     Key? key,
-    required this.sections,
+    required this.dataMap,
+    required this.colorList,
     required this.height,
-    this.sectionsSpace = 3,
-    this.centerSpaceRadius = 50,
     this.onSectionTapped,
   }) : super(key: key);
 
@@ -23,69 +21,37 @@ class AnimatedPieChart extends StatefulWidget {
   State<AnimatedPieChart> createState() => _AnimatedPieChartState();
 }
 
-class _AnimatedPieChartState extends State<AnimatedPieChart>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
+class _AnimatedPieChartState extends State<AnimatedPieChart> {
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return SizedBox(
-          height: widget.height,
-          child: PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                enabled: widget.onSectionTapped != null,
-                touchCallback: widget.onSectionTapped != null
-                    ? (FlTouchEvent event, pieTouchResponse) {
-                        if (!event.isInterestedForInteractions ||
-                            pieTouchResponse == null ||
-                            pieTouchResponse.touchedSection == null) {
-                          return;
-                        }
-                        widget.onSectionTapped!(
-                            pieTouchResponse.touchedSection!.touchedSectionIndex);
-                      }
-                    : null,
-              ),
-              sectionsSpace: widget.sectionsSpace.toDouble(),
-              centerSpaceRadius: widget.centerSpaceRadius,
-              sections: widget.sections.map((section) {
-                return PieChartSectionData(
-                  value: section.value,
-                  title: section.title,
-                  color: section.color,
-                  radius: section.radius * _animation.value,
-                  titleStyle: section.titleStyle,
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
+    return SizedBox(
+      height: widget.height,
+      child: PieChart(
+        dataMap: widget.dataMap,
+        animationDuration: const Duration(milliseconds: 1500),
+        chartType: ChartType.ring,
+        ringStrokeWidth: 32,
+        colorList: widget.colorList,
+        chartRadius: widget.height / 2,
+        legendOptions: const LegendOptions(
+          showLegends: false,
+        ),
+        chartValuesOptions: const ChartValuesOptions(
+          showChartValueBackground: false,
+          showChartValues: true,
+          showChartValuesInPercentage: true,
+          showChartValuesOutside: false,
+          decimalPlaces: 1,
+        ),
+        centerText: widget.dataMap.length == 2
+            ? 'Ticket\nStats'
+            : 'Ticket\nTypes',
+        centerTextStyle: const TextStyle(
+          color: Colors.black87,
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }
@@ -186,10 +152,13 @@ class AnalyticsPage extends StatelessWidget {
   }
 
   Widget _buildCheckInStats(BuildContext context, UserResponse data) {
-    final checkedIn = data.checkedInCount;
-    final total = data.totalCount;
-    final notCheckedIn = total - checkedIn;
-    final checkedInPercentage = total > 0 ? (checkedIn / total * 100) : 0.0;
+    final checkedIn = data.checkedInCount.toDouble();
+    final notCheckedIn = (data.totalCount - data.checkedInCount).toDouble();
+
+    final dataMap = <String, double>{
+      'Checked In': checkedIn,
+      'Not Checked In': notCheckedIn,
+    };
 
     return SizedBox(
       height: 450,
@@ -215,7 +184,7 @@ class AnalyticsPage extends StatelessWidget {
                   delay: const Duration(milliseconds: 100),
                   child: _buildStatCard(
                     'Checked In',
-                    checkedIn.toString(),
+                    data.checkedInCount.toString(),
                     Colors.green,
                     context,
                   ),
@@ -224,7 +193,7 @@ class AnalyticsPage extends StatelessWidget {
                   delay: const Duration(milliseconds: 150),
                   child: _buildStatCard(
                     'Not Checked In',
-                    notCheckedIn.toString(),
+                    (data.totalCount - data.checkedInCount).toString(),
                     Colors.red,
                     context,
                   ),
@@ -236,37 +205,8 @@ class AnalyticsPage extends StatelessWidget {
               delay: const Duration(milliseconds: 300),
               child: AnimatedPieChart(
                 height: 171,
-                sectionsSpace: 4,
-                centerSpaceRadius: 51,
-                onSectionTapped: (index) {
-                  _showCheckInDetails(context, checkedIn, notCheckedIn,
-                      checkedInPercentage, index);
-                },
-                sections: [
-                  PieChartSectionData(
-                    value: checkedIn.toDouble(),
-                    title: '${checkedInPercentage.toStringAsFixed(1)}%',
-                    color: Colors.green,
-                    radius: 86,
-                    titleStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  PieChartSectionData(
-                    value: notCheckedIn.toDouble(),
-                    title:
-                        '${(100 - checkedInPercentage).toStringAsFixed(1)}%',
-                    color: Colors.red,
-                    radius: 86,
-                    titleStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                dataMap: dataMap,
+                colorList: [Colors.green, Colors.red],
               ),
             ),
           ],
@@ -574,21 +514,12 @@ class AnalyticsPage extends StatelessWidget {
     }
 
     final ticketTypeEntries = ticketTypeCount.entries.toList();
-
-    final sections = ticketTypeEntries.map((entry) {
-      final percentage = (entry.value / data.results.length * 100);
-      return PieChartSectionData(
-        value: entry.value.toDouble(),
-        title: percentage >= 5 ? '${percentage.toStringAsFixed(1)}%' : '',
-        color: typeColors[entry.key],
-        radius: 80,
-        titleStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      );
-    }).toList();
+    final colorList = ticketTypeEntries.map((entry) => typeColors[entry.key]!).toList();
+    
+    final dataMap = <String, double>{};
+    for (var entry in ticketTypeEntries) {
+      dataMap[entry.key] = entry.value.toDouble();
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -609,13 +540,8 @@ class AnalyticsPage extends StatelessWidget {
             delay: const Duration(milliseconds: 500),
             child: AnimatedPieChart(
               height: 250,
-              sectionsSpace: 3,
-              centerSpaceRadius: 50,
-              onSectionTapped: (index) {
-                _showTicketTypeDetails(
-                    context, ticketTypeEntries, ticketTypeCount, index);
-              },
-              sections: sections,
+              dataMap: dataMap,
+              colorList: colorList,
             ),
           ),
           const SizedBox(height: 20),
